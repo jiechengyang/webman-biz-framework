@@ -42,8 +42,18 @@ php console list
  php console make:biz Log setting_log
  // 暂不支持在同一业务层目录下生成相关连的service，比如：用户层user 关联的用户Token UserTokenService 需要放到Biz\User\Service 和 Biz\User\Dao 里，可以手动放入，该功能后期可以完善
 ```
-# 问题
-## 感谢
+# 截图
+ - ![目录结构](./docs/images/code001.png)
+ - ![console](./docs/images/code002.png)
+ - ![phpmig](./docs/images/code003.png)
+ - ![service层目录结构](./docs/images/code004.png)
+ - ![service层接口代码示例](./docs/images/code005.png)
+ - ![资源层或controller层调用代码示例1](./docs/images/code006.png)
+ - ![资源层或controller层调用代码示例2](./docs/images/code007.png)
+# 说明
+1. 框架目前用于内部项目，运行很稳定，暂未出现致命问题，由于内部问题，代码开源时间会在下半年，愿意深入沟通的可以联系邮箱：yangjiecheng1995@163.com
+2. 深入沟通的朋友一定是想使用webman-biz的哟，此项目不是拉取用户来收钱的，留联系方式仅作为技术交流并希望得到用户的反馈
+# 感谢
 - [webman](https://www.workerman.net/doc/webman/)
 - [biz](https://github.com/codeages/biz-framework)
 - [symfony](https://symfony.com/)
