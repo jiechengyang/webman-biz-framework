@@ -43,7 +43,7 @@ php console list
  // 暂不支持在同一业务层目录下生成相关连的service，比如：用户层user 关联的用户Token UserTokenService 需要放到Biz\User\Service 和 Biz\User\Dao 里，可以手动放入，该功能后期可以完善
 ```
 ## DEMO
-  执行migrate后，启动该项目，首页展示的一个检索demo，可输入`1.0`再输入框进行搜索
+  执行migrate后，终端运行`php console terms:import true`, 再启动该项目，首页展示的一个检索demo，可输入`1.0`再输入框进行搜索
 
 ## 快速开始
 
