@@ -16,7 +16,7 @@ class TermsServiceImpl extends BaseService implements TermsService
 
     public function searchTerms(array $conditions = [], array $orderby = [], $start, $limit, array $columns = [])
     {
-       return $this->getTermsDao()->search($conditions, $orderby, $start, $limit, $columns);
+        return $this->getTermsDao()->search($conditions, $orderby, $start, $limit, $columns);
     }
 
     public function truncate()
@@ -36,15 +36,17 @@ class TermsServiceImpl extends BaseService implements TermsService
         }
 
         $rows = [];
+        $topCatalogs = $this->generateTopCatalogs();
         foreach ($items as &$item) {
             $catalog = $item['catalog'];
-            if ('1.0' === $catalog) {
-                $item['code'] = '1';
+            if (in_array($catalog, $topCatalogs)) {
+                $item['code'] = $catalog;
                 $item['depth'] = 1;
                 $item['parentCode'] = '0';
             } else {
-                $item['code'] = $catalog;
                 $levels = explode('.', $catalog);
+                $levels[0] .= '.0';
+                $item['code'] = implode('.', $levels);
                 $depth = count($levels);
                 $item['depth'] = $depth;
                 array_pop($levels);
@@ -105,6 +107,16 @@ class TermsServiceImpl extends BaseService implements TermsService
         }
 
         ksort($items, SORT_NUMERIC);
+
+        return $items;
+    }
+
+    protected function generateTopCatalogs($n = 20)
+    {
+        $items = [];
+        for ($i = 1; $i <= $n; $i++) {
+            $items[] = sprintf("%s.0", $i);
+        }
 
         return $items;
     }

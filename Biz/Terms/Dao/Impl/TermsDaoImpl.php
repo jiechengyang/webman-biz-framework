@@ -17,12 +17,6 @@ class TermsDaoImpl extends AdvancedDaoImpl implements TermsDao
 
     protected function createQueryBuilder($conditions)
     {
-//        if (isset($conditions['codeLike'])) {
-//            $conditions['orCode'] = trim($conditions['codeLike'], '.');
-//            $conditions['codeOrLike'] = $conditions['codeLike'];
-//            unset($conditions['codeLike']);
-//        }
-
         return parent::createQueryBuilder($conditions);
     }
 
@@ -48,7 +42,6 @@ class TermsDaoImpl extends AdvancedDaoImpl implements TermsDao
                 'type PRE_LIKE (:typeLike)',
                 'code = :code',
                 'code PRE_LIKE (:codeLike)',
-                '(code PRE_LIKE (:codeOrLike) OR code = (:orCode) )',
                 'parentCode = :parentCode',
                 'parentCode PRE_LIKE (:parentCodeLike)',
                 'name = :name',
