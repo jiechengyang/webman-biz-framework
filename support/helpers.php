@@ -14,16 +14,15 @@
 
 use support\Request;
 use support\Response;
-use support\view\Raw;
-use support\bootstrap\Translation;
-use Webman\App;
-use Webman\Config;
-use Webman\Exception\ClassNotFoundException;
+use support\Translation;
 use support\Container;
+use support\view\Raw;
 use support\view\Blade;
 use support\view\ThinkPHP;
 use support\view\Twig;
 use Workerman\Worker;
+use Webman\App;
+use Webman\Config;
 use Webman\Route;
 
 // Phar support.
@@ -33,25 +32,6 @@ if (is_phar()) {
     define('BASE_PATH', realpath(__DIR__ . '/../'));
 }
 define('WEBMAN_VERSION', '1.3.0');
-
-/**
- * @return string
- */
-function biz_path()
-{
-    return BASE_PATH . DIRECTORY_SEPARATOR . 'Biz';
-}
-
-
-function uploads_path()
-{
-    return public_path() . DIRECTORY_SEPARATOR . 'uploads';
-}
-
-function static_assets_path()
-{
-    return public_path() . DIRECTORY_SEPARATOR . 'assets';
-}
 
 if (!function_exists('envHelper')) {
     /**
@@ -90,6 +70,7 @@ if (!function_exists('envHelper')) {
         return $value;
     }
 }
+
 
 function scanfiles($dir, &$data = [], $excludes = [])
 {
