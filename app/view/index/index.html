@@ -41,7 +41,7 @@
 <script src="assets/js/bootstrap-table-export.min.js"></script>
 <script src="assets/js/bootstrap-treeview.min.js"></script>
 <script>
-    var keywords = '';
+    var globalKeywords = [];
     var currentDeleteNodeId = ''
     var operateEvents = {
         'click.remove': function (e, value, row, index) {
@@ -122,7 +122,7 @@
             },
         ],
         responseHandler: function (res) {
-            keywords = res.data.keywords
+            globalKeywords = res.data.keywords
             return res.data.items;
         }
     });
@@ -136,7 +136,12 @@
     }
 
     function queryParams(params) {
-        params.keywords = keywords ? keywords + ',' + $('#keywords').val() : $('#keywords').val();
+        // params.keywords = keywords ? keywords + ',' + $('#keywords').val() : $('#keywords').val();
+        console.log('globalKeywords:', globalKeywords)
+        if (globalKeywords.indexOf($('#keywords').val()) < 0) {
+            globalKeywords.push($('#keywords').val());
+        }
+        params.keywords = globalKeywords.join(',');
         if (currentDeleteNodeId) {
             params.delId = currentDeleteNodeId
         }
@@ -146,8 +151,13 @@
 
     function removeNode(event) {
         var row = $(event).data('row');
+        console.log('removeNode before globalKeywords:', globalKeywords);
         console.log('row:', row);
-        currentDeleteNodeId = row.id
+        currentDeleteNodeId = row.id;
+        globalKeywords = globalKeywords.filter(function (keyword) {
+            return keyword != row.catalog;
+        });
+        console.log('removeNode after globalKeywords:', globalKeywords);
         $table.bootstrapTable('refresh');
         currentDeleteNodeId = '';
     }

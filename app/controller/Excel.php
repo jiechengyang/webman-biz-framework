@@ -56,7 +56,7 @@ class Excel extends AbstractController
 
         return $this->createSuccessJsonResponse([
             'items' => $rows,
-            'keywords' => implode(',', $keywords)
+            'keywords' => array_values($keywords)
         ]);
     }
 
