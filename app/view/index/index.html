@@ -175,6 +175,7 @@
             return false;
         }
 
+        globalDelIds = [];
         $table.bootstrapTable('refresh');
         $("#keywords").val('');
     });
@@ -183,6 +184,7 @@
         e = e || window.event;
         key = e.keyCode || e.which || e.charCode;
         if (key === 13) {
+            globalDelIds = [];
             $table.bootstrapTable('refresh');
             $(this).val('');
         }
