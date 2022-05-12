@@ -29,6 +29,11 @@ class TermsServiceImpl extends BaseService implements TermsService
         return $this->getTermsDao()->get($id);
     }
 
+    public function getTermsInIds($ids)
+    {
+        return $this->getTermsDao()->getTermsByIds($ids);
+    }
+
     public function batchCreateTerms(array $items)
     {
         if (empty($items)) {

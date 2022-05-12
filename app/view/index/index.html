@@ -42,6 +42,7 @@
 <script src="assets/js/bootstrap-treeview.min.js"></script>
 <script>
     var globalKeywords = [];
+    var globalDelIds = [];
     var currentDeleteNodeId = ''
     var operateEvents = {
         'click.remove': function (e, value, row, index) {
@@ -142,9 +143,11 @@
             globalKeywords.push($('#keywords').val());
         }
         params.keywords = globalKeywords.join(',');
-        if (currentDeleteNodeId) {
-            params.delId = currentDeleteNodeId
+        if (currentDeleteNodeId && globalDelIds.indexOf(currentDeleteNodeId) < 0) {
+            globalDelIds.push(currentDeleteNodeId);
         }
+
+        params.delIds = globalDelIds.join(',');
 
         return params;
     }

@@ -29,18 +29,12 @@ class Excel extends AbstractController
         if (!empty($params['keywords'])) {
             unset($conditions['id']);
             $keywords = array_filter(array_unique(explode(',', $params['keywords'])));
+            $keywords = $this->compareKeywords($keywords);
             asort($keywords);
         }
 
-        if (!empty($params['delId'])) {
-            $term = $this->getTermsService()->getTermsById($params['delId']);
-            if (!empty($term)) {
-                $explainTerms = $this->searchTerms(['codeLike' => $term['code']], false, ['id']);
-                $explainTermIds = ArrayToolkit::column($explainTerms, 'id');
-                if (!empty($explainTermIds)) {
-                    $conditions['noIds'] = $explainTermIds;
-                }
-            }
+        if (!empty($params['delIds'])) {
+            $conditions = $this->fillRemoveConditions($params['delIds'], $conditions);
         }
 
         $rows = [];
@@ -65,12 +59,99 @@ class Excel extends AbstractController
         return response($id);
     }
 
+    protected function fillRemoveConditions($delIds, $conditions)
+    {
+        $delIds = explode(',', $delIds);
+        $terms = $this->getTermsService()->getTermsInIds($delIds);
+        $noIds = [];
+        foreach ($terms as $term) {
+            $explainTerms = $this->searchTerms(['codeLike' => $term['code']], false, ['id']);
+            $explainTermIds = ArrayToolkit::column($explainTerms, 'id');
+            if (!empty($explainTermIds)) {
+                $noIds = array_merge($noIds, $explainTermIds);
+            }
+        }
+
+        $conditions['noIds'] = array_unique($noIds);
+
+        return $conditions;
+    }
+    protected function compareKeywords($keywords)
+    {
+        $currentKeyword = end($keywords);
+        $prevKeyword = prev($keywords);
+        if (strpos($currentKeyword, '.0') !== false) {
+            $currentLevel = 1;
+        } else {
+            $currentLevel = count(explode('.', $currentKeyword));
+        }
+
+        $currentLevel = $this->getCatalogLevel($currentKeyword);
+        $prevLevel = $this->getCatalogLevel($prevKeyword);
+
+        if ($currentLevel > $prevLevel) {
+            $currentParents = $this->getCatalogParents($currentKeyword);
+            if (in_array($prevKeyword, $currentParents)) {
+                return [$currentKeyword];
+            }
+        }
+
+        $parents = [];
+        foreach ($keywords as $keyword) {
+            $parents += $this->getCatalogParents($keyword);
+        }
+        if (in_array($currentKeyword, $parents)) {
+            return [$currentKeyword];
+        }
+
+        return $keywords;
+    }
+
+    protected function getCatalogLevel($catalog)
+    {
+        if (empty($catalog)) {
+            return 0;
+        }
+
+        if (strpos($catalog, '.0') !== false) {
+            return 1;
+        }
+
+        return count(explode('.', $catalog));
+    }
+
+    protected function getCatalogParents($currentCatalog)
+    {
+        $numbers = explode('.', $currentCatalog);
+        $level = count($numbers);
+        $parents = [];
+        if ($level === 4) {
+            array_pop($numbers);
+            $parents[] = implode('.', $numbers);
+            array_pop($numbers);
+            $parents[] = implode('.', $numbers);
+            array_pop($numbers);
+            $parents[] = sprintf("%s.0", implode('.', $numbers));
+        } elseif ($level === 3) {
+            array_pop($numbers);
+            $parents[] = implode('.', $numbers);//1.1
+            array_pop($numbers);
+            $parents[] = sprintf("%s.0", implode('.', $numbers));
+        } elseif ($level === 2) {
+            array_pop($numbers);
+            $parents[] = sprintf("%s.0", implode('.', $numbers));
+        }
+
+        return $parents;
+    }
+
     protected function keywordFormat($keyword)
     {
         $keywords = explode('.', $keyword);
         if (strpos($keyword, '.0') === false) {
             $keywords[0] .= '.0';
         }
+
 
         return implode('.', $keywords);
     }

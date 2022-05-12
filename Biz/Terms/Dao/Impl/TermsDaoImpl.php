@@ -10,6 +10,11 @@ class TermsDaoImpl extends AdvancedDaoImpl implements TermsDao
 
     protected $table = 'smp_terms';
 
+    public function getTermsByIds($ids)
+    {
+        return $this->findInField('id', $ids);
+    }
+    
     public function truncate()
     {
         $this->db()->executeUpdate("TRUNCATE table {$this->table};");

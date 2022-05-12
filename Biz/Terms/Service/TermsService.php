@@ -6,6 +6,8 @@ interface TermsService
 {
     public function getTermsById($id);
 
+    public function getTermsInIds($ids);
+
     public function createTerms(array $fields);
 
     public function updateTerms($id, array $fields);
