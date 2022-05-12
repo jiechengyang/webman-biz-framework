@@ -155,7 +155,12 @@
         console.log('row:', row);
         currentDeleteNodeId = row.id;
         globalKeywords = globalKeywords.filter(function (keyword) {
-            return keyword != row.catalog;
+            var val = keyword.toString() + '.0';
+            if (val == row.catalog || keyword == row.catalog) {
+                return false;
+            }
+
+            return  true;
         });
         console.log('removeNode after globalKeywords:', globalKeywords);
         $table.bootstrapTable('refresh');
