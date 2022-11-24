@@ -1,0 +1,80 @@
+#!/usr/bin/env php
+<?php
+
+set_time_limit(0);
+
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'autoload.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'helpers.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'ServiceKernel.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'biz' . DIRECTORY_SEPARATOR . 'DaoProvider.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'biz' . DIRECTORY_SEPARATOR . 'ServiceProvider.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'biz' . DIRECTORY_SEPARATOR . 'ExtensionsProvider.php';
+require_once __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'bootstrap' . DIRECTORY_SEPARATOR . 'biz' . DIRECTORY_SEPARATOR . 'MonologServiceProvider.php';
+
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Debug\Debug;
+use Symfony\Component\Console\Command\Command;
+
+$autoloadFiles = [];
+$autoloadPaths = [
+    __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'utils',
+    __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR . 'exception',
+    __DIR__ . DIRECTORY_SEPARATOR . 'gii',
+];
+foreach ($autoloadPaths as $path) {
+    foreach (scanfiles($path) as $file) {
+        $arr = explode('.', $file);
+        $ext = array_pop($arr);
+        if ('php' !== strtolower($ext)) {
+            continue;
+        }
+
+        $autoloadFiles[] = $file;
+    }
+}
+
+spl_autoload_register(function ($class) use ($autoloadFiles) {
+    if (!class_exists($class)) {
+        $file = sprintf("%s%s%s.php", __DIR__, DIRECTORY_SEPARATOR, str_replace("\\", DIRECTORY_SEPARATOR, $class));
+        if (is_file($file) && in_array($file, $autoloadFiles)) {
+            require_once $file;
+        }
+    }
+});
+
+$input = new ArgvInput();
+$env = $input->getParameterOption(array('--env', '-e'), 'dev');
+$debug = !$input->hasParameterOption(array('--no-debug', '')) && $env !== 'prod';
+
+if ($debug) {
+    Debug::enable();
+}
+
+function registerCommands(Application $application)
+{
+    $commandFiles = scanfiles(__DIR__ . '/commands');
+    foreach ($commandFiles as $commandFile) {
+        if ('Command.php' !== substr($commandFile, -11)) {
+            continue;
+        }
+
+        $className = "\\commands\\" . substr($commandFile, strrpos($commandFile, '/') + 1, -4);
+        if (!class_exists($className)) {
+            echo "\033[31m {$className} not exist\033[0m", PHP_EOL;
+        }
+
+        $reflection = new ReflectionClass($className);
+        $command = $reflection->newInstance();
+        if (!$command instanceof Command) {
+            continue;
+        }
+
+        $application->add($command);
+    }
+}
+
+$application = new Application('webman-biz-console', '1.0.0');
+registerCommands($application);
+$application->run($input);
+

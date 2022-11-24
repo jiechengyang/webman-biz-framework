@@ -1,0 +1,194 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="/favicon.ico"/>
+    <link href="assets/css/reset-min.css" rel="stylesheet">
+    <link href="assets/css/fontawesome.all.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap-table.min.css" rel="stylesheet">
+    <link href="assets/css/dataTables.bootstrap.css" rel="stylesheet">
+    <link href="assets/css/bootstrap-treeview.min.css" rel="stylesheet">
+    <title>流程框架检索</title>
+    <style>
+        .container {
+            width: 1440px;
+            height: 720px;
+        }
+
+        #searchTable {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="form-inline " id="toolbar">
+        <input type="text" class="form-control mb-2 mr-sm-2" id="keywords" placeholder="">
+        <button type="button" id="btn_query" class="btn btn-secondary mb-2"><i class="fa fa-search"
+                                                                               aria-hidden="true"></i></button>
+    </div>
+    <table id="searchTable" class="table table-striped table-bordered table-hover dataTable"></table>
+</div>
+<script src="assets/js/jquery.min.js"></script>
+<script src="assets/js/tableExport.min.js"></script>
+<script src="assets/js/popper.min.js"></script>
+<script src="assets/js/bootstrap.min.js"></script>
+<script src="assets/js/bootstrap-table.min.js"></script>
+<script src="assets/js/bootstrap-table-locale-all.min.js"></script>
+<script src="assets/js/bootstrap-table-export.min.js"></script>
+<script src="assets/js/bootstrap-treeview.min.js"></script>
+<script>
+    var globalKeywords = [];
+    var globalDelIds = [];
+    var currentDeleteNodeId = ''
+    var operateEvents = {
+        'click.remove': function (e, value, row, index) {
+            console.log(e, value, row, index)
+            // $table.bootstrapTable('remove', {
+            //     field: 'id',
+            //     values: [row.id]
+            // })
+        }
+    };
+    var $table = $('#searchTable').bootstrapTable('destroy').bootstrapTable({
+        url: '/api/excel/search',
+        queryParams: "queryParams",
+        toolbar: "#toolbar",
+        sidePagination: false,
+        striped: true, // 是否显示行间隔色
+        search: false,
+        showSearchButton: true,
+        // uniqueId: "id",
+        pagination: false, // 是否分页
+        sortable: true, // 是否启用排序
+        showRefresh: true,
+        showToggle: false,
+        showFullscreen: false,
+        showExport: true,
+        exportDataType: "all",
+        exportTypes: ['json', 'csv', 'txt', 'excel'],
+        exportOptions: {
+            ignoreColumn: [9]
+        },
+        locale: 'zh-CN',
+        columns: [
+            {
+                field: 'id',
+                title: '序号'
+            },
+            {
+                field: 'catalog',
+                title: '类别'
+            },
+            {
+                field: 'catalogName',
+                title: '类别'
+            },
+            {
+                field: 'flowGroupCode',
+                title: '流程组'
+            },
+            {
+                field: 'flowGroupCodeName',
+                title: '流程组'
+            },
+            {
+                field: 'flowCode',
+                title: '流程'
+            },
+            {
+                field: 'flowCodeName',
+                title: '流程'
+            },
+            {
+                field: 'activityCode',
+                title: '活动'
+            },
+            {
+                field: 'activityCodeName',
+                title: '活动'
+            },
+            {
+                field: 'operate',
+                title: '操作',
+                width: 120,
+                align: 'center',
+                valign: 'middle',
+                clickToSelect: false,
+                // events: operateEvents,
+                formatter: operateFormatter,
+            },
+        ],
+        responseHandler: function (res) {
+            globalKeywords = res.data.keywords
+            return res.data.items;
+        }
+    });
+
+    function operateFormatter(value, row, index) {
+        return [
+            '<a class="remove" href="javascript:void(0)" title="删除" onclick="removeNode(this)"  data-row=\'' + JSON.stringify(row) + '\' data-index="' + index + '">',
+            '<i class="fa fa-trash"></i>',
+            '</a>'
+        ].join('')
+    }
+
+    function queryParams(params) {
+        // params.keywords = keywords ? keywords + ',' + $('#keywords').val() : $('#keywords').val();
+        console.log('globalKeywords:', globalKeywords)
+        if (globalKeywords.indexOf($('#keywords').val()) < 0) {
+            globalKeywords.push($('#keywords').val());
+        }
+        params.keywords = globalKeywords.join(',');
+        if (currentDeleteNodeId && globalDelIds.indexOf(currentDeleteNodeId) < 0) {
+            globalDelIds.push(currentDeleteNodeId);
+        }
+
+        params.delIds = globalDelIds.join(',');
+
+        return params;
+    }
+
+    function removeNode(event) {
+        var row = $(event).data('row');
+        console.log('removeNode before globalKeywords:', globalKeywords);
+        console.log('row:', row);
+        currentDeleteNodeId = row.id;
+        globalKeywords = globalKeywords.filter(function (keyword) {
+            var val = keyword.toString() + '.0';
+            if (val == row.catalog || keyword == row.catalog) {
+                return false;
+            }
+
+            return  true;
+        });
+        console.log('removeNode after globalKeywords:', globalKeywords);
+        $table.bootstrapTable('refresh');
+        currentDeleteNodeId = '';
+    }
+
+    $("#btn_query").on('click', function (event) {
+        if (!$("#keywords").val()) {
+            return false;
+        }
+
+        globalDelIds = [];
+        $table.bootstrapTable('refresh');
+        $("#keywords").val('');
+    });
+
+    $("#keywords").keypress(function (e) {
+        e = e || window.event;
+        key = e.keyCode || e.which || e.charCode;
+        if (key === 13) {
+            globalDelIds = [];
+            $table.bootstrapTable('refresh');
+            $(this).val('');
+        }
+    });
+</script>
+</body>
+</html>
